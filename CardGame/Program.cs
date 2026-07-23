@@ -10,6 +10,8 @@ namespace CardGame
     {
         static void Main(string[] args)
         {
+            PokerDeck deck = new PokerDeck();
+
 
             Console.ReadLine();
         }
@@ -17,11 +19,11 @@ namespace CardGame
 
     public abstract class Deck
     {
-        protected List<PlayingCard> fullDeck = new List<PlayingCard>();
-        protected List<PlayingCard> drawPile = new List<PlayingCard>();
-        protected List<PlayingCard> discardPile = new List<PlayingCard>();
+        protected List<PlayingCardModel> fullDeck = new List<PlayingCardModel>();
+        protected List<PlayingCardModel> drawPile = new List<PlayingCardModel>();
+        protected List<PlayingCardModel> discardPile = new List<PlayingCardModel>();
 
-        public void CreateDeck()
+        protected void CreateDeck()
         {
             fullDeck.Clear();
 
@@ -29,7 +31,7 @@ namespace CardGame
             {
                 for (int val = 0; val < 13; val++)
                 {
-                    fullDeck.Add(new PlayingCard { Suit = (CardSuit)suit, Value = (CardValue)val });
+                    fullDeck.Add(new PlayingCardModel { Suit = (CardSuit)suit, Value = (CardValue)val });
                 }
             }
         }
@@ -38,13 +40,13 @@ namespace CardGame
         {
             var rnd = new Random();
             drawPile = fullDeck.OrderBy(x => rnd.Next()).ToList();
-        }        
+        }
 
-        public abstract List<PlayingCard> DealCards(); // we don't know how to deal cards, but we know every game needs to deal cards
+        public abstract List<PlayingCardModel> DealCards(); // we don't know how to deal cards, but we know every game needs to deal cards
 
-        public virtual PlayingCard RequestCard()
+        protected virtual PlayingCardModel DrawOneCard()
         {
-            PlayingCard output = drawPile.Take(1).First(); // take one fromthe draw pile
+            PlayingCardModel output = drawPile.Take(1).First(); // take one from the draw pile
             drawPile.Remove(output); // remove the same card from the draw pile
             return output;
         }
@@ -58,47 +60,56 @@ namespace CardGame
             CreateDeck();
             ShuffleDeck();
         }
-        public override List<PlayingCard> DealCards()
+        public override List<PlayingCardModel> DealCards()
         {
-            List<PlayingCard> output = new List<PlayingCard>();
+            List<PlayingCardModel> output = new List<PlayingCardModel>();
 
             for (int i = 0; i < 5; i++)
             {
-                output.Add(RequestCard());
+                output.Add(DrawOneCard());
+            }
+
+            return output;
+        }
+
+        public List<PlayingCardModel> RequestCards(List<PlayingCardModel> cardsToDiscard)
+        {
+            List<PlayingCardModel> output = new List<PlayingCardModel>();
+
+            foreach (var card in cardsToDiscard)
+            {
+                output.Add(DrawOneCard());
+                discardPile.Add(card);
             }
 
             return output;
         }
     }
 
-    public class PlayingCard
+    public class BlackJackDeck : Deck
     {
-        public CardSuit Suit { get; set; }
-        public CardValue Value { get; set; }
-    }
 
-    public enum CardValue
-    {
-        Ace,
-        Two,
-        Three,
-        Four,
-        Five,
-        Six,
-        Seven,
-        Eight,
-        Nine,
-        Ten,
-        Jack,
-        Queen,
-        King
-    }
+        public BlackJackDeck()
+        {
+            CreateDeck();
+            ShuffleDeck();
+        }
 
-    public enum CardSuit
-    {
-        Hearts,
-        Clubs,
-        Diamonds,
-        Spades
+        public override List<PlayingCardModel> DealCards()
+        {
+            List<PlayingCardModel> output = new List<PlayingCardModel>();
+
+            for (int i = 0; i < 2; i++)
+            {
+                output.Add(DrawOneCard());
+            }
+
+            return output;
+        }
+
+        public PlayingCardModel RequestCard()
+        {
+            return DrawOneCard();
+        }
     }
 }
